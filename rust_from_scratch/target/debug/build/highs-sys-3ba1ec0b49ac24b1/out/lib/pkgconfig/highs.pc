@@ -1,0 +1,12 @@
+prefix=/Users/vivekchaudhary/Documents/progressive_hedging/rust_from_scratch/target/debug/build/highs-sys-3ba1ec0b49ac24b1/out
+libdir=/Users/vivekchaudhary/Documents/progressive_hedging/rust_from_scratch/target/debug/build/highs-sys-3ba1ec0b49ac24b1/out/lib
+includedir=/Users/vivekchaudhary/Documents/progressive_hedging/rust_from_scratch/target/debug/build/highs-sys-3ba1ec0b49ac24b1/out/include/highs
+
+Name: HiGHS
+Description: Linear Optimization Software
+URL: https://github.com/ERGO-Code/HiGHS
+Version: 1.6.0
+Libs: -L${libdir} -lhighs
+#TODO Libs.private (when HiGHS lib is build as static lib)
+Cflags: -I${includedir}
+Requires:
