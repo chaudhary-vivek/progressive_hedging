@@ -1,0 +1,10 @@
+[package]
+name = "pha"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+good_lp = "1.2.0"
+ndarray = "0.15.6"
+ndarray-linalg = "0.16.0"
+
