@@ -48,6 +48,10 @@ STOCH_FILE_BLOCKS_LINTR_MODE = "BLOCKS_LINTR"
 STOCH_FILE_INDEP_DISCRETE_MODE = "INDEP_DISCRETE"
 STOCH_FILE_INDEP_DISTRIB_MODE = "INDEP_DISTRIB"
 
+#SCENARIO modes
+STOCH_FILE_SCENARIO_DISCRETE_MODE = "SCENARIO_DISCRETE"
+
+
 class Block(object):
     
     period = ""
@@ -226,6 +230,12 @@ def _load_stoch_file(path, name, objective_name, row_names, col_names, rhs_names
                 elif line[1] in ["UNIFORM", "NORMAL", "BETA", "GAMMA", "LOGNORMAL"]:
                     mode = STOCH_FILE_INDEP_DISTRIB_MODE
                     indep_distribution = line[1]
+            elif line[0] == STOCH_FILE_SCENARIOS_MODE:
+                if line[1] == "DISCRETE":
+                    mode = STOCH_FILE_SCENARIO_DISCRETE_MODE
+                elif line[1] in ["UNIFORM", "NORMAL", "BETA", "GAMMA", "LOGNORMAL"]:
+                    mode = STOCH_FILE_INDEP_DISTRIB_MODE
+                    indep_distribution = line[1]
             # BLOCKS mode handler
             elif mode == STOCH_FILE_BLOCKS_DISCRETE_MODE:
                 if line[0] == STOCH_FILE_BLOCKS_BL_MODE:
@@ -322,6 +332,9 @@ def _load_stoch_file(path, name, objective_name, row_names, col_names, rhs_names
                     elif indep_distribution == "LOGNORMAL":
                         independent_variables[(i,j)] = {"position": description, "period": line[3],
                                           "distrib": {"type": "LN(mu, sigma**2)", "parameters": {"mu": float(line[2]), "sigma**2": float(line[4])}}}
+            elif mode == STOCH_FILE_SCENARIO_DISCRETE_MODE:
+                pass
+            
     return blocks, independent_variables
 def _get_indices(row_names, col_names, line):
     i = -1
