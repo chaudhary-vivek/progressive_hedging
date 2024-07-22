@@ -193,6 +193,8 @@ def _load_stoch_file(path, name, objective_name, row_names, col_names, rhs_names
     last_block = ""
     blocks = {}
     independent_variables = {}
+    scenarios = {}
+
     
     is_rv = False
     indep_distribution = ""
@@ -306,34 +308,27 @@ def _load_stoch_file(path, name, objective_name, row_names, col_names, rhs_names
                     else:
                         description = {"type": "matrix", "ROW": i, "COL": j}
                     independent_variables[(i,j)] = {"position": description, "period": line[3], "distrib": [(float(line[2]), float(line[4]))]}
-            elif mode == STOCH_FILE_INDEP_DISTRIB_MODE:
-                i, j = _get_indices(row_names, col_names, line)
-                if (i,j) in independent_variables:
-                    raise Exception("Tried to set independent distribution of an element twice.")
-                else:
-                    if i < 0:
-                        description = {"type": line[1], "VAR": j}
-                    elif j < 0:
-                        description = {"type": line[0], "ROW": i}
-                    else:
-                        description = {"type": "matrix", "ROW": i, "COL": j}
-                    if indep_distribution == "NORMAL":
-                        independent_variables[(i,j)] = {"position": description, "period": line[3],
-                                          "distrib": {"type": "N(mu, sigma**2)", "parameters": {"mu": float(line[2]), "sigma**2": float(line[4])}}}
-                    elif indep_distribution == "UNIFORM":
-                        independent_variables[(i,j)] = {"position": description, "period": line[3],
-                                          "distrib": {"type": "U(a, b)", "parameters": {"a": float(line[2]), "b": float(line[4])}}}
-                    elif indep_distribution == "BETA":
-                        independent_variables[(i,j)] = {"position": description, "period": line[3],
-                                          "distrib": {"type": "B(p, q)", "parameters": {"p": float(line[2]), "q": float(line[4])}}}
-                    elif indep_distribution == "GAMMA":
-                        independent_variables[(i,j)] = {"position": description, "period": line[3],
-                                          "distrib": {"type": "G(p, b)", "parameters": {"p": float(line[2]), "b": float(line[4])}}}
-                    elif indep_distribution == "LOGNORMAL":
-                        independent_variables[(i,j)] = {"position": description, "period": line[3],
-                                          "distrib": {"type": "LN(mu, sigma**2)", "parameters": {"mu": float(line[2]), "sigma**2": float(line[4])}}}
             elif mode == STOCH_FILE_SCENARIO_DISCRETE_MODE:
-                pass
+                if line[0] == "SC":
+                    scenario_name = line[1]
+                    probability = float(line[3])
+                    scenarios[scenario_name] = {
+                        "probability": probability,
+                        "changes": {}
+                    }
+                    current_scenario = scenario_name
+                else:
+                    element_type = line[0]
+                    row_or_col = line[1]
+                    value = float(line[2])
+                    
+                    if element_type == "RHS":
+                        row_index = row_names.index(row_or_col)
+                        scenarios[current_scenario]["changes"][(row_index, -1)] = value
+                    else:
+                        pass
+    
+    return blocks, independent_variables, scenarios
             
     return blocks, independent_variables
 def _get_indices(row_names, col_names, line):
@@ -477,8 +472,8 @@ def load_mps(path):
 def load_smps(path):
     name, objective_name, row_names, col_names, col_types, types, c, A, rhs_names, rhs, bnd_names, bnd = load_mps(path + ".cor")
     periods, row_periods, col_periods = _load_time_file(path, name, row_names, col_names)
-    blocks, independent_variables = _load_stoch_file(path, name, objective_name, row_names, col_names, rhs_names)
-    return {"name": name, "objective_name": objective_name, "constraints": [(row_names[i], row_periods[i], types[i]) for i in range(len(row_names))], "variables": [(col_names[i], col_periods[i], col_types[i]) for i in range(len(col_names))], "c": c, "A": A, "rhs_names": rhs_names, "rhs": rhs, "bounds": bnd, "periods": periods, "blocks": blocks, "independent_variables": independent_variables}
+    blocks, independent_variables, scenarios = _load_stoch_file(path, name, objective_name, row_names, col_names, rhs_names)
+    return {"name": name, "objective_name": objective_name, "constraints": [(row_names[i], row_periods[i], types[i]) for i in range(len(row_names))], "variables": [(col_names[i], col_periods[i], col_types[i]) for i in range(len(col_names))], "c": c, "A": A, "rhs_names": rhs_names, "rhs": rhs, "bounds": bnd, "periods": periods, "blocks": blocks, "scenarios": scenarios}
     
 
 
